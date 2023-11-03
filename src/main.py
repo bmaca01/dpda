@@ -27,17 +27,23 @@ class DPDA:
     def print_transitions(self, q):
         print("Transitions for state {}:".format(q))
         if (self.trans):
-            a = self.trans[q][0]
-            t = self.trans[q][1]
-            w = self.trans[q][3]
+            for i in range(len(self.trans[q]))
+            a = self.trans[q][i][0]
+            t = self.trans[q][i][1]
+            w = self.trans[q][i][3]
             print("[{0},{1}->{2}]".format(a, t, w))
 
     def get_transition(self, q):
+        '''
+        Prompts user to add transition rule for q.
+        Checks if able to add the transition.
+        If able, returns tuple (a,t,r,w,c)
+        '''
         tmp = input("Need a transition rule for state {0} ? (y or n)"
             .format(q))
 
         if (tmp == "n"):
-            continue
+            return False
         else:
             a = input("Input Symbol to read (enter - for epsilon): ")
             t = input("Stack symbol to match and pop (enter - for epsilon): ")
@@ -49,12 +55,16 @@ class DPDA:
                 + "first symbol to top of stack (enter - for ep"
                 + "silon): ").strip().split(",")
             c = condition(a, t)
+            if (valid()):
+                return (a, t, r, w, c)
+            return False
 
-    def add_transition(self, q, a, t, r, w, c):
+    def add_transition(self, q, entry):
         #TODO: Make into switch statement maybe?
+        c = entry[4]
         if (c == 1):
             if (not self.trans[q]):
-                self.trans[q] = (a, t, r, w, c)
+                self.trans[q] = entry
                 return
             else:
                 #TODO: Error handling
@@ -112,7 +122,8 @@ def main():
 
     for i in range(Q):
         M.print_transitions(i);
-        M.get_transition(i);
+        if (M.get_transition(i)):
+            M.add_transition()
 
 
 if __name__ == '__main__':
