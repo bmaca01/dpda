@@ -12,16 +12,21 @@ what am i doing
 class DPDA:
     """
     Class representation of DPDA
-    stack: DPDA stack
-    alpha: language alphabet
-    num_s: number of states
-    acc_s: accept states
+    Q: number of states
+    SIG: language alphabet
+    GAM: stack alphabet
+    F: accept states
+
+    d: transitions for each state
+    stack: dpda stack memory
     """
-    def __init__(self, num_s, alpha, acc_s):
-        self.num_s = num_s
-        self.alpha = alpha
-        self.acc_states = acc_s
-        self.trans = {}
+    def __init__(self):
+        self.Q = -1
+        self.SIG = -1
+        self.GAM = set('$')
+        self.F = -1
+        
+        self.d = {}
         self.stack = []
 
     def print_transitions(self, q):
