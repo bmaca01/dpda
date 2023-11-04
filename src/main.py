@@ -29,6 +29,50 @@ class DPDA:
         self.d = {}
         self.stack = []
 
+    def set_init(self):
+        """
+        Prompts user to set Q, SIG, GAM, F.
+        return void
+        """
+        while (self.Q == -1):
+            try:
+                self.Q = int(input("Enter number of states :\n"))
+            except:
+                print("Invalid input: number of states must be int")
+
+        while (self.SIG == -1):
+            tmp = set(input(
+                "Enter input alphabet as a"
+                + " comma-separated list of symbols :\n").strip().split(","))
+            if ("$" in tmp):
+                print("Can't have '$' as a symbol")
+                continue
+            if ('-' in tmp):
+                print("Can't have '-' as a symbol")
+                continue
+            self.SIG = tmp
+
+        self.GAM = self.SIG | self.GAM
+
+        while (self.F == -1):
+            # For all accept states, delimit by comma, convert to int, store in list.
+            try:
+                i = set(map(int,
+                    input(
+                        "Enter accepting states as a "
+                        + "comma-separated list of integers :\n").strip().split(",")))
+
+                m = max(i)
+                if (m > self.Q - 1):
+                    print(
+                        "invalid state {0}; enter a value between {1} and {2}"
+                        .format(m, 0, self.Q - 1))
+                    continue
+                self.F = i
+            except:
+                print("Invalid input: accept state must be integers")
+        return
+
     def print_transitions(self, q):
         print("Transitions for state {}:".format(q))
         if (self.trans):
