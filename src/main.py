@@ -27,11 +27,11 @@ class DPDA:
     def print_transitions(self, q):
         print("Transitions for state {}:".format(q))
         if (self.trans):
-            for i in range(len(self.trans[q]))
-            a = self.trans[q][i][0]
-            t = self.trans[q][i][1]
-            w = self.trans[q][i][3]
-            print("[{0},{1}->{2}]".format(a, t, w))
+            for i in range(len(self.trans[q])):
+                a = self.trans[q][i][0]
+                t = self.trans[q][i][1]
+                w = self.trans[q][i][3]
+                print("[{0},{1}->{2}]".format(a, t, w))
 
     def get_transition(self, q):
         '''
