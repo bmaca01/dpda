@@ -4,11 +4,6 @@ Benedikt Macaro
 DPDA simulator
 '''
 
-'''
-what am i doing
-1) get states (int), input alphabet (comma separated no space), accept state (comma separated no space)
-2) get transitions
-'''
 class DPDA:
     """
     Class representation of DPDA
@@ -34,6 +29,8 @@ class DPDA:
         Prompts user to set Q, SIG, GAM, F.
         return void
         """
+        # TODO: input validation: (ano pa ba?)
+
         while (self.Q == -1):
             try:
                 self.Q = int(input("Enter number of states :\n"))
@@ -41,9 +38,13 @@ class DPDA:
                 print("Invalid input: number of states must be int")
 
         while (self.SIG == -1):
+            #TODO: allow symbols |a| > 1 ??
             tmp = set(input(
                 "Enter input alphabet as a"
                 + " comma-separated list of symbols :\n").strip().split(","))
+            if ("" in tmp):
+                print("Input alphabet can't be empty")
+                continue
             if ("$" in tmp):
                 print("Can't have '$' as a symbol")
                 continue
@@ -75,12 +76,44 @@ class DPDA:
 
     def print_transitions(self, q):
         print("Transitions for state {}:".format(q))
-        if (self.trans):
-            for i in range(len(self.trans[q])):
-                a = self.trans[q][i][0]
-                t = self.trans[q][i][1]
-                w = self.trans[q][i][3]
+        if (q in self.d):
+            for n in self.d[q]:
+                a = n[0]
+                t = n[1]
+                w = n[3]
+                if (a == "-"):
+                    a = "eps"
+                if (t == "-"):
+                    t = "eps"
+                if (w == "-"):
+                    w = "eps"
                 print("[{0},{1}->{2}]".format(a, t, w))
+        return
+
+    def print_all_transitions(self):
+        for i in range(self.Q):
+            self.print_transitions(i)
+        return
+
+
+    def get_all_transitions(self):
+        for i in range(self.Q):
+            tmp = -1
+            while (tmp != 'y' or tmp != 'n'):
+                self.print_transitions(i)
+                tmp = input("Need a transition rule for state {0} ? (y or n)"
+                            .format(i))
+                if (tmp == "n"):
+                    break
+                elif (tmp == "y"):
+                    trans = self.get_transition(i)
+                    if (trans):
+                        self.add_transition(i, trans)
+                    else:
+                        print("did not add")
+                else:
+                    print("Invalid input: must be 'y' or 'n'")
+        return
 
     def get_transition(self, q):
         '''
@@ -88,92 +121,111 @@ class DPDA:
         Checks if able to add the transition.
         If able, returns tuple (a,t,r,w,c)
         '''
-        tmp = input("Need a transition rule for state {0} ? (y or n)"
-            .format(q))
+        a, t, r, w, c = -1, -1, -1, -1, -1
+        SIG_e = set("-") | self.SIG
+        GAM_e = set("-") | self.GAM
 
-        if (tmp == "n"):
-            return False
-        else:
+        while (a not in SIG_e):
             a = input("Input Symbol to read (enter - for epsilon): ")
+            if (a not in SIG_e or len(a) > 1):
+                print("Invalid input: symbol not in alphabet")
+
+        while (t not in GAM_e):
             t = input("Stack symbol to match and pop (enter - for epsilon): ")
-            r = int(input("State to transition to : "))
-            # TODO: for w - validation and shit, probably broken LMAO
-            # Need to make sure stack symbols being pushed are in the alphabet
-            w = input(
+            if (t not in GAM_e or len(a) > 1):
+                print("Invalid input: symbol not in stack alphabet")
+
+        while (r not in range(self.Q)):
+            try:
+                    r = int(input("State to transition to : "))
+                    if (r not in range(self.Q)):
+                        print("Invalid input: input greater than", self.Q)
+            except:
+                print("Invalid input: state must be integer")
+
+        while (w == -1):
+            # TODO: Need to make sure stack symbols being pushed are in the alphabet
+            tmp = input(
                 "Stack symbols to push as comma separated list, "
                 + "first symbol to top of stack (enter - for ep"
-                + "silon): ").strip().split(",")
-            c = condition(a, t)
-            if (valid()):
-                return (a, t, r, w, c)
-            return False
+                + "silon): ")
+            tmp_s = set(tmp.replace(",", ""))
+            if ("-" in tmp and len(tmp) > 1):
+                print("Invalid input: invalid string")
+            if (tmp_s & GAM_e == tmp_s):
+                w = tmp
+            else:
+                print("Invalid input: invalid string")
+
+        c = self.condition(a, t)
+        case = self.valid(q, (a, t, r, w, c))
+        if (case == 0):
+            return (a, t, r, w, c)
+        print("Invalid transition!")
+        #TODO: Specific error msg based on condition violation
+        return False
 
     def add_transition(self, q, entry):
-        #TODO: Make into switch statement maybe?
-        c = entry[4]
-        if (c == 1):
-            if (not self.trans[q]):
-                self.trans[q] = entry
-                return
-            else:
-                #TODO: Error handling
-                pass
-        elif (c == 2):
-            pass
-        elif (c == 3):
-            pass
-        elif (c == 4):
-            pass
+        if (q not in self.d):
+            self.d[q] = [entry]
+        else:
+            self.d[q].append(entry)
+        return
         
 
-def condition(sym_read, stack_top):
-    if sym_read == '-' and stack_top == '-':
-        return 1
-    elif sym_read == '-' and stack_top != '-':
-        return 2
-    elif sym_read != '-' and stack_top == '-':
-        return 3
-    return 4
+    def condition(self, sym_read, stack_top):
+        '''
+        helper function
+        determine which condition for transition being added
+        '''
+        if (sym_read == '-' and stack_top == '-'):
+            return 1
+        elif (sym_read == '-' and stack_top != '-'):
+            return 2
+        elif (sym_read != '-' and stack_top == '-'):
+            return 3
+        return 4
+
+    def valid(self, q, trans):
+        '''
+        helper function
+        takes in state and tuple.
+        Lookup in d for transitions
+        compares trans tuple to existing transitions in d
+        return 0: valid, not 0: invalid specific errors
+        '''
+        c = trans[4]
+        if (q not in self.d):
+            return 0
+
+        if (c == 1):
+            if (q in self.d):
+                return 1
+
+        elif (c == 2):
+            for t in self.d[q]:
+                if (t[4] == 1 or t[1] == trans[1]):
+                    return 2
+
+        elif (c == 3):
+            for t in self.d[q]:
+                if (t[4] == 1 or t[0] == trans[0]):
+                    return 3
+
+        elif (c == 4):
+            for t in self.d[q]:
+                if (t[4] == 1 or (t[0] == trans[0] or t[1] == trans[1])):
+                    return 4
+        else:
+            print("how did we get here")
+            return 5
+        return 0
 
 def main():
-    '''
-    TODO: input validation: (ano pa ba?)
-        Q (must be int), 
-        sigma (cannot be empty), 
-        F (must be ints)
-    '''
-
-    Q = int(input("Enter number of states :\n"))
-    sigma = input(
-        "Enter input alphabet as a"
-        + " comma-separated list of symbols :\n").strip().split(",")
-    F = []
-    while (not F):
-        # For all accept states, delimit by comma, convert to int, store in list.
-        i = list(map(int, 
-            input(
-                "Enter accepting states as a "
-                + "comma-separated list of integers :\n").strip().split(",")))
-
-        m = max(i)
-        if (m > Q - 1):
-            print(
-                "invalid state {0}; enter a value between {1} and {2}"
-                .format(m, 0, Q - 1))
-            continue
-        F = i
-
-    print("Q: ", Q)
-    print("sigma: ", sigma)
-    print("F: ", F)
-
-    M = DPDA(Q, sigma, F)
-
-    for i in range(Q):
-        M.print_transitions(i);
-        if (M.get_transition(i)):
-            M.add_transition()
-
+    M = DPDA()
+    M.set_init()
+    M.get_all_transitions()
+    M.print_all_transitions()
 
 if __name__ == '__main__':
     main();
