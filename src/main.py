@@ -1,3 +1,4 @@
+#!/bin/python3
 '''
 CS 341-005
 Benedikt Macaro
