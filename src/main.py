@@ -4,6 +4,15 @@ CS 341-005
 Benedikt Macaro
 DPDA simulator
 '''
+#TODO:
+'''
+Code consistency:
+- 's' or "s"?
+- where to break long strings?
+- consistent design?
+- strict typing?
+- pure functions?
+'''
 
 class DPDA:
     """
@@ -75,27 +84,44 @@ class DPDA:
                 print("Invalid input: accept state must be integers")
         return
 
+    def trans_to_str_idx(self, q, i):
+        if (q not in self.d):
+            return ""
+        else:
+            a = self.d[q][i][0]
+            t = self.d[q][i][1]
+            w = self.d[q][i][3]
+            if (a == "-"):
+                a = "eps"
+            if (t == "-"):
+                t = "eps"
+            if (w == "-"):
+                w = "eps"
+            return "[{0},{1}->{2}]".format(a, t, w)
+
+    def trans_to_str_tup(self, tup):
+        a = tup[0]
+        t = tup[1]
+        w = tup[3]
+        if (a == "-"):
+            a = "eps"
+        if (t == "-"):
+            t = "eps"
+        if (w == "-"):
+            w = "eps"
+        return "[{0},{1}->{2}]".format(a, t, w)
+
     def print_transitions(self, q):
-        print("Transitions for state {}:".format(q))
+        print("Transitions for state {0}:".format(q))
         if (q in self.d):
-            for n in self.d[q]:
-                a = n[0]
-                t = n[1]
-                w = n[3]
-                if (a == "-"):
-                    a = "eps"
-                if (t == "-"):
-                    t = "eps"
-                if (w == "-"):
-                    w = "eps"
-                print("[{0},{1}->{2}]".format(a, t, w))
+            for i in range(len(self.d[q])):
+                print(self.trans_to_str_idx(q, i))
         return
 
     def print_all_transitions(self):
         for i in range(self.Q):
             self.print_transitions(i)
         return
-
 
     def get_all_transitions(self):
         for i in range(self.Q):
@@ -110,8 +136,6 @@ class DPDA:
                     trans = self.get_transition(i)
                     if (trans):
                         self.add_transition(i, trans)
-                    else:
-                        print("did not add")
                 else:
                     print("Invalid input: must be 'y' or 'n'")
         return
@@ -159,11 +183,8 @@ class DPDA:
                 print("Invalid input: invalid string")
 
         c = self.condition(a, t)
-        case = self.valid(q, (a, t, r, w, c))
-        if (case == 0):
+        if (self.valid(q, (a, t, r, w, c))):
             return (a, t, r, w, c)
-        print("Invalid transition!")
-        #TODO: Specific error msg based on condition violation
         return False
 
     def add_transition(self, q, entry):
@@ -195,32 +216,33 @@ class DPDA:
         compares trans tuple to existing transitions in d
         return 0: valid, not 0: invalid specific errors
         '''
-        c = trans[4]
         if (q not in self.d):
-            return 0
+            return True
 
-        if (c == 1):
-            if (q in self.d):
-                return 1
+        for t in self.d[q]:
+            # The given output is WRONG lmao but this is to match it ;-;
+            if (t[4] == 1):
+                print("Violation of DPDA due to epsilon input/epsilon"
+                      + " stack transition from state {0}: ".format(q)
+                      + self.trans_to_str_tup(t))
+                return False
 
-        elif (c == 2):
-            for t in self.d[q]:
-                if (t[4] == 1 or t[1] == trans[1]):
-                    return 2
+            elif ((t[0] == trans[0]) and (t[1] == trans[1])):
+                print("Violation of DPDA due to multiple transitions"
+                      + " for the same input and "
+                      + "stack top from state {0}: ".format(q)
+                      + self.trans_to_str_tup(t))
+                return False
 
-        elif (c == 3):
-            for t in self.d[q]:
-                if (t[4] == 1 or t[0] == trans[0]):
-                    return 3
+            elif ((trans[4] == 1)
+                  or (t[0] == trans[0])
+                  or (t[1] == trans[1])):
+                print("Violation of DPDA due to epsilon stack"
+                      + " transition from state {0}: ".format(q)
+                      + self.trans_to_str_tup(t))
+                return False
 
-        elif (c == 4):
-            for t in self.d[q]:
-                if (t[4] == 1 or (t[0] == trans[0] or t[1] == trans[1])):
-                    return 4
-        else:
-            print("how did we get here")
-            return 5
-        return 0
+        return True
 
 def main():
     M = DPDA()
