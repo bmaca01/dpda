@@ -84,21 +84,6 @@ class DPDA:
                 print("Invalid input: accept state must be integers")
         return
 
-    def trans_to_str_idx(self, q, i):
-        if (q not in self.d):
-            return ""
-        else:
-            a = self.d[q][i][0]
-            t = self.d[q][i][1]
-            w = self.d[q][i][3]
-            if (a == "-"):
-                a = "eps"
-            if (t == "-"):
-                t = "eps"
-            if (w == "-"):
-                w = "eps"
-            return "[{0},{1}->{2}]".format(a, t, w)
-
     def trans_to_str_tup(self, tup):
         a = tup[0]
         t = tup[1]
@@ -114,8 +99,8 @@ class DPDA:
     def print_transitions(self, q):
         print("Transitions for state {0}:".format(q))
         if (q in self.d):
-            for i in range(len(self.d[q])):
-                print(self.trans_to_str_idx(q, i))
+            for t in self.d[q]:
+                print(self.trans_to_str_tup(t))
         return
 
     def print_all_transitions(self):
