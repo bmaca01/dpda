@@ -1,4 +1,4 @@
-#!/bin/python3
+#!/usr/bin/python3
 '''
 CS 341-005
 Benedikt Macaro
@@ -133,9 +133,7 @@ class DPDA:
                 if (tmp == "n"):
                     break
                 elif (tmp == "y"):
-                    trans = self.get_transition(i)
-                    if (trans):
-                        self.add_transition(i, trans)
+                    self.get_transition(i)
                 else:
                     print("Invalid input: must be 'y' or 'n'")
         return
@@ -184,8 +182,8 @@ class DPDA:
 
         c = self.condition(a, t)
         if (self.valid(q, (a, t, r, w, c))):
-            return (a, t, r, w, c)
-        return False
+            self.add_transition(q, (a, t, r, w, c))
+        return
 
     def add_transition(self, q, entry):
         if (q not in self.d):
@@ -194,7 +192,6 @@ class DPDA:
             self.d[q].append(entry)
         return
         
-
     def condition(self, sym_read, stack_top):
         '''
         helper function
