@@ -84,7 +84,7 @@ class DPDA:
                 print("Invalid input: accept state must be integers")
         return
 
-    def trans_to_str_tup(self, tup):
+    def trans_to_str(self, tup):
         a = tup[0]
         t = tup[1]
         w = tup[3]
@@ -100,7 +100,7 @@ class DPDA:
         print("Transitions for state {0}:".format(q))
         if (q in self.d):
             for t in self.d[q]:
-                print(self.trans_to_str_tup(t))
+                print(self.trans_to_str(t))
         return
 
     def print_all_transitions(self):
@@ -206,14 +206,14 @@ class DPDA:
             if (t[4] == 1):
                 print("Violation of DPDA due to epsilon input/epsilon"
                       + " stack transition from state {0}:".format(q)
-                      + self.trans_to_str_tup(t))
+                      + self.trans_to_str(t))
                 return False
 
             elif ((t[0] == trans[0]) and (t[1] == trans[1])):
                 print("Violation of DPDA due to multiple transitions"
                       + " for the same input and "
                       + "stack top from state {0}:".format(q)
-                      + self.trans_to_str_tup(t))
+                      + self.trans_to_str(t))
                 return False
 
             elif ((trans[4] == 1)
@@ -221,7 +221,7 @@ class DPDA:
                   or (t[1] == trans[1])):
                 print("Violation of DPDA due to epsilon stack"
                       + " transition from state {0}:".format(q)
-                      + self.trans_to_str_tup(t))
+                      + self.trans_to_str(t))
                 return False
 
         return True
