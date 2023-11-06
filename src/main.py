@@ -223,14 +223,14 @@ class DPDA:
             # The given output is WRONG lmao but this is to match it ;-;
             if (t[4] == 1):
                 print("Violation of DPDA due to epsilon input/epsilon"
-                      + " stack transition from state {0}: ".format(q)
+                      + " stack transition from state {0}:".format(q)
                       + self.trans_to_str_tup(t))
                 return False
 
             elif ((t[0] == trans[0]) and (t[1] == trans[1])):
                 print("Violation of DPDA due to multiple transitions"
                       + " for the same input and "
-                      + "stack top from state {0}: ".format(q)
+                      + "stack top from state {0}:".format(q)
                       + self.trans_to_str_tup(t))
                 return False
 
@@ -238,7 +238,7 @@ class DPDA:
                   or (t[0] == trans[0])
                   or (t[1] == trans[1])):
                 print("Violation of DPDA due to epsilon stack"
-                      + " transition from state {0}: ".format(q)
+                      + " transition from state {0}:".format(q)
                       + self.trans_to_str_tup(t))
                 return False
 
