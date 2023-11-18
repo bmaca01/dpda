@@ -23,7 +23,6 @@ class DPDA:
     F: accept states
 
     d: transitions for each state
-    stack: dpda stack memory
     """
     def __init__(self):
         self.Q = -1
@@ -32,7 +31,6 @@ class DPDA:
         self.F = -1
         
         self.d = {}
-        self.stack = []
 
     def set_init(self):
         """
@@ -226,11 +224,99 @@ class DPDA:
 
         return True
 
+def process_s(M, s): 
+    '''
+    This shit is so messy LMAO
+    '''
+    stack = []              # DPDA Stack
+    curr_s = 0              # DPDA State
+    curr_sym = "-"          # Current "token"
+    next_sym = ""           # Next "token"
+    stack_top = "-"         # Stack top
+    accept = False
+
+    i = 0
+    while (True):
+        t = M.d[curr_s]     # list of transitions for state curr_s
+
+        if (i == len(s) and curr_s in M.F):
+            accept = True
+
+        if (i != len(s)):
+            curr_sym = s[i]
+
+        if (i + 1 < len(s)):
+            next_sym = s[i + 1]
+
+        if (len(stack) > 0):
+            stack_top = stack[-1]
+        else:
+            stack_top = "-"
+
+        for it in t:
+            # Check each rule from the current state
+            a = it[0]
+            t = it[1]
+            r = it[2]
+            w = it[3]
+            c = it[4]
+
+            # First check if eps, eps rule exists
+            # Or check if input match rule exists
+            if (    c == 1 
+                    or (c == 3 and s[i] == a)
+                    or (c == 4 and s[i] == a and stack_top == t)):
+
+                # 1) move to next state
+                curr_s = r
+
+                if ((c == 3 or c == 4) and i < len(s)):
+                    i += 1
+                if (c == 4):
+                    stack.pop()
+
+                # 2) push symbols from transition on to stack
+                if (w != "-"):
+                    for char in w[::-1]:
+                        stack.append(char)
+
+                break
+
+            elif (c == 2 and stack_top == t):
+                curr_s = r
+                stack.pop()
+                if (w != "-"):
+                    for char in w[::-1]:
+                        stack.append(char)
+                break
+
+        if (i != len(s) and len(stack) > 0):
+            continue
+
+        else:
+            break
+
+
 def main():
+
+    # Set up DPDA through user input
     M = DPDA()
     M.set_init()
     M.get_all_transitions()
     M.print_all_transitions()
+
+    # Process input strings through DPDA
+    print("\n\n\n")
+    print("M.Q:", M.Q)
+    print("M.SIG:", M.SIG)
+    print("M.GAM:", M.GAM)
+    print("M.F:", M.F)
+    print("M.d:", M.d)
+    '''
+    while (True):
+        s = input("Enter an input string to be processed by the PDA : ")
+        process_s(M, s)
+    '''
 
 if __name__ == '__main__':
     main();
