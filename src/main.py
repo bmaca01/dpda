@@ -360,20 +360,12 @@ def process_s(M, s):
                 return (False, configs)
 
 def main():
-
     # Set up DPDA through user input
     M = DPDA()
     M.set_init()
     M.get_all_transitions()
     M.print_all_transitions()
 
-    # Process input strings through DPDA
-    print("\n\n\n")
-    print("M.Q:", M.Q)
-    print("M.SIG:", M.SIG)
-    print("M.GAM:", M.GAM)
-    print("M.F:", M.F)
-    print("M.d:", M.d)
     s = input("Enter an input string to be processed by the PDA : ")
     ret = process_s(M, s)
     print("Accept string {0}?".format(s), ret[0])
