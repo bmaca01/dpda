@@ -228,6 +228,15 @@ class DPDA:
 
         return True
 
+def stack_to_str(l):
+    rtn = ""
+    # If the stack is empty
+    if (not l):
+        return "eps"
+    for it in l:
+        rtn += it
+    return rtn[::-1]
+
 def process_s(M, s): 
     '''
     This shit is so messy LMAO
@@ -254,7 +263,10 @@ def process_s(M, s):
     i = 0
     while (True):
         # Update configurations string
-        configs += "({0};{1};{2})".format(curr_s, s[i:], stack)
+        if (s[i:] == ""):
+            configs += "(q{0};eps;{1})".format(curr_s, stack_to_str(stack))
+        else:
+            configs += "(q{0};{1};{2})".format(curr_s, s[i:], stack_to_str(stack))
 
         # Update the transitions for the current state
         t = M.d[curr_s]
@@ -318,7 +330,12 @@ def process_s(M, s):
                         stack.append(char)
 
                 # 5) update configs with transition taken
-                configs += "--[{0},{1}->{2}]-->".format(a, t, w)
+                if (c == 1):
+                    configs += "--[eps,eps->{0}]-->".format(w)
+                elif (c == 3):
+                    configs += "--[{0},eps->{1}]-->".format(a, w)
+                else:
+                    configs += "--[{0},{1}->eps]-->".format(a, t)
                 break
 
             # Next check if skip input read and match stack rule exists
@@ -335,7 +352,7 @@ def process_s(M, s):
                         stack.append(char)
 
                 # 4) update configs with transition taken
-                configs += "--[{0},{1}->{2}]-->".format(a, t, w)
+                configs += "--[eps,{0}->eps]-->".format(t)
                 break
 
             # If no transition is possible and there's input to read, stop computation

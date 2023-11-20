@@ -1,0 +1,72 @@
+Enter number of states :
+Enter input alphabet as a comma-separated list of symbols :
+Enter accepting states as a comma-separated list of integers :
+invalid state 4; enter a value between 0 and 3
+Enter accepting states as a comma-separated list of integers :
+Transitions for state 0:
+Need a transition rule for state 0 ? (y or n)Input Symbol to read (enter - for epsilon): Stack symbol to match and pop (enter - for epsilon): State to transition to : Stack symbols to push as comma separated list, first symbol to top of stack (enter - for epsilon): Transitions for state 0:
+[eps,eps->$]
+Need a transition rule for state 0 ? (y or n)Input Symbol to read (enter - for epsilon): Stack symbol to match and pop (enter - for epsilon): State to transition to : Stack symbols to push as comma separated list, first symbol to top of stack (enter - for epsilon): Violation of DPDA due to epsilon input/epsilon stack transition from state 0:[eps,eps->$]
+Transitions for state 0:
+[eps,eps->$]
+Need a transition rule for state 0 ? (y or n)Input Symbol to read (enter - for epsilon): Stack symbol to match and pop (enter - for epsilon): State to transition to : Stack symbols to push as comma separated list, first symbol to top of stack (enter - for epsilon): Violation of DPDA due to epsilon input/epsilon stack transition from state 0:[eps,eps->$]
+Transitions for state 0:
+[eps,eps->$]
+Need a transition rule for state 0 ? (y or n)Input Symbol to read (enter - for epsilon): Stack symbol to match and pop (enter - for epsilon): State to transition to : Stack symbols to push as comma separated list, first symbol to top of stack (enter - for epsilon): Violation of DPDA due to epsilon input/epsilon stack transition from state 0:[eps,eps->$]
+Transitions for state 0:
+[eps,eps->$]
+Need a transition rule for state 0 ? (y or n)Input Symbol to read (enter - for epsilon): Stack symbol to match and pop (enter - for epsilon): State to transition to : Stack symbols to push as comma separated list, first symbol to top of stack (enter - for epsilon): Violation of DPDA due to epsilon input/epsilon stack transition from state 0:[eps,eps->$]
+Transitions for state 0:
+[eps,eps->$]
+Need a transition rule for state 0 ? (y or n)Transitions for state 1:
+Need a transition rule for state 1 ? (y or n)Input Symbol to read (enter - for epsilon): Stack symbol to match and pop (enter - for epsilon): State to transition to : Stack symbols to push as comma separated list, first symbol to top of stack (enter - for epsilon): Transitions for state 1:
+[0,eps->0]
+Need a transition rule for state 1 ? (y or n)Input Symbol to read (enter - for epsilon): Stack symbol to match and pop (enter - for epsilon): State to transition to : Stack symbols to push as comma separated list, first symbol to top of stack (enter - for epsilon): Transitions for state 1:
+[0,eps->0]
+[1,0->eps]
+Need a transition rule for state 1 ? (y or n)Input Symbol to read (enter - for epsilon): Stack symbol to match and pop (enter - for epsilon): State to transition to : Stack symbols to push as comma separated list, first symbol to top of stack (enter - for epsilon): Violation of DPDA due to epsilon stack transition from state 1:[0,eps->0]
+Transitions for state 1:
+[0,eps->0]
+[1,0->eps]
+Need a transition rule for state 1 ? (y or n)Transitions for state 2:
+Need a transition rule for state 2 ? (y or n)Input Symbol to read (enter - for epsilon): Stack symbol to match and pop (enter - for epsilon): State to transition to : Stack symbols to push as comma separated list, first symbol to top of stack (enter - for epsilon): Transitions for state 2:
+[1,0->eps]
+Need a transition rule for state 2 ? (y or n)Input Symbol to read (enter - for epsilon): Stack symbol to match and pop (enter - for epsilon): State to transition to : Stack symbols to push as comma separated list, first symbol to top of stack (enter - for epsilon): Violation of DPDA due to epsilon stack transition from state 2:[1,0->eps]
+Transitions for state 2:
+[1,0->eps]
+Need a transition rule for state 2 ? (y or n)Input Symbol to read (enter - for epsilon): Stack symbol to match and pop (enter - for epsilon): State to transition to : Stack symbols to push as comma separated list, first symbol to top of stack (enter - for epsilon): Violation of DPDA due to multiple transitions for the same input and stack top from state 2:[1,0->eps]
+Transitions for state 2:
+[1,0->eps]
+Need a transition rule for state 2 ? (y or n)Input Symbol to read (enter - for epsilon): Stack symbol to match and pop (enter - for epsilon): State to transition to : Stack symbols to push as comma separated list, first symbol to top of stack (enter - for epsilon): Transitions for state 2:
+[1,0->eps]
+[eps,$->eps]
+Need a transition rule for state 2 ? (y or n)Transitions for state 3:
+Need a transition rule for state 3 ? (y or n)Transitions for state 0:
+[eps,eps->$]
+Transitions for state 1:
+[0,eps->0]
+[1,0->eps]
+Transitions for state 2:
+[1,0->eps]
+[eps,$->eps]
+Transitions for state 3:
+
+
+
+
+M.Q: 4
+M.SIG: {'1', '0'}
+M.GAM: {'1', '$', '0'}
+M.F: {3}
+M.d: {0: [('-', '-', 1, '$', 1)], 1: [('0', '-', 1, '0', 3), ('1', '0', 2, '-', 4)], 2: [('1', '0', 2, '-', 4), ('-', '$', 3, '-', 2)], 3: []}
+Enter an input string to be processed by the PDA : Accept string 000111? True
+
+(q0;000111;eps)--[eps,eps->$]-->
+(q1;000111;$)--[0,eps->0]-->
+(q1;00111;0$)--[0,eps->0]-->
+(q1;0111;00$)--[0,eps->0]-->
+(q1;111;000$)--[1,0->eps]-->
+(q2;11;00$)--[1,0->eps]-->
+(q2;1;0$)--[1,0->eps]-->
+(q2;eps;$)--[eps,$->eps]-->
+(q3;eps;eps)
