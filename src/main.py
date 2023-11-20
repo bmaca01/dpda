@@ -235,9 +235,9 @@ def process_s(M, s):
     stack_top = "-"         # Stack top
 
     '''
-    x1: q_i in F
-    x2: s[i:] == ''
-    x3: stack == []
+    x1: q_i in F        := In accepting state
+    x2: s[i:] == ''     := Done reading input
+    x3: stack == []     := Stack is empty
     accept: x1 and x2 and x3
     '''
     x1 = False
@@ -256,6 +256,12 @@ def process_s(M, s):
         x2 = s[i:] == ""
         x3 = len(stack) == 0
         accept = x1 and x2 and x3
+
+        if (accept):
+            return True
+
+        if (x2):
+            return False
 
         # Set stream pointer and lookahead
         if (i != len(s)):
@@ -316,7 +322,7 @@ def process_s(M, s):
                 break
 
             # If no transition is possible and there's input to read, stop computation
-            elif (i < len(s) and it == t[-1]):
+            elif (x2 and it == t[-1]):
                 return False
 
 def main():
@@ -334,11 +340,8 @@ def main():
     print("M.GAM:", M.GAM)
     print("M.F:", M.F)
     print("M.d:", M.d)
-    '''
-    while (True):
-        s = input("Enter an input string to be processed by the PDA : ")
-        process_s(M, s)
-    '''
+    s = input("Enter an input string to be processed by the PDA : ")
+    process_s(M, s)
 
 if __name__ == '__main__':
     main();
