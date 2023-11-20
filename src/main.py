@@ -233,14 +233,21 @@ def process_s(M, s):
     curr_sym = "-"          # Current "token"
     next_sym = ""           # Next "token"
     stack_top = "-"         # Stack top
+
+    '''
+    a: q_i in F
+    b: s[i:] == ''
+    c: stack == []
+    accept: a and b and c
+    '''
+    a = False
+    b = False
+    c = True
     accept = False
 
     i = 0
     while (True):
         t = M.d[curr_s]     # list of transitions for state curr_s
-
-        if (i == len(s) and curr_s in M.F):
-            accept = True
 
         if (i != len(s)):
             curr_sym = s[i]
