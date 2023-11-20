@@ -235,41 +235,50 @@ def process_s(M, s):
     stack_top = "-"         # Stack top
 
     '''
-    a: q_i in F
-    b: s[i:] == ''
-    c: stack == []
-    accept: a and b and c
+    x1: q_i in F
+    x2: s[i:] == ''
+    x3: stack == []
+    accept: x1 and x2 and x3
     '''
-    a = False
-    b = False
-    c = True
+    x1 = False
+    x2 = False
+    x3 = True
     accept = False
 
+    # Start computation loop
     i = 0
     while (True):
-        t = M.d[curr_s]     # list of transitions for state curr_s
+        # Update the transitions for the current state
+        t = M.d[curr_s]
 
+        # Check the DPDA configuration
+        x1 = curr_s in M.F
+        x2 = s[i:] == ""
+        x3 = len(stack) == 0
+        accept = x1 and x2 and x3
+
+        # Set stream pointer and lookahead
         if (i != len(s)):
             curr_sym = s[i]
 
         if (i + 1 < len(s)):
             next_sym = s[i + 1]
 
+        # Set stack pointer if stack not empty
         if (len(stack) > 0):
             stack_top = stack[-1]
         else:
             stack_top = "-"
 
+        # Choose a transition to make from current state
         for it in t:
-            # Check each rule from the current state
             a = it[0]
             t = it[1]
             r = it[2]
             w = it[3]
             c = it[4]
 
-            # First check if eps, eps rule exists
-            # Or check if input match rule exists
+            # First check if eps, eps rule exists or check if input match rule exists
             if (    c == 1 
                     or (c == 3 and s[i] == a)
                     or (c == 4 and s[i] == a and stack_top == t)):
@@ -277,32 +286,38 @@ def process_s(M, s):
                 # 1) move to next state
                 curr_s = r
 
+                # 2) advance stream pointer if input is matched
                 if ((c == 3 or c == 4) and i < len(s)):
                     i += 1
+
+                # 3) update the stack if stack is matched
                 if (c == 4):
                     stack.pop()
 
-                # 2) push symbols from transition on to stack
+                # 4) push symbols from transition on to stack
                 if (w != "-"):
                     for char in w[::-1]:
                         stack.append(char)
 
                 break
 
+            # Next check if skip input read and match stack rule exists
             elif (c == 2 and stack_top == t):
+                # 1) move to next state
                 curr_s = r
+
+                # 2) update the stack
                 stack.pop()
+
+                # 3) push symbols from transition on to stack
                 if (w != "-"):
                     for char in w[::-1]:
                         stack.append(char)
                 break
 
-        if (i != len(s) and len(stack) > 0):
-            continue
-
-        else:
-            break
-
+            # If no transition is possible and there's input to read, stop computation
+            elif (i < len(s) and it == t[-1]):
+                return False
 
 def main():
 
