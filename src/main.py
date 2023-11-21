@@ -262,27 +262,6 @@ def process_s(M, s):
     # Start computation loop
     i = 0
     while (True):
-        # Update configurations string
-        if (s[i:] == ""):
-            configs += "(q{0};eps;{1})".format(curr_s, stack_to_str(stack))
-        else:
-            configs += "(q{0};{1};{2})".format(curr_s, s[i:], stack_to_str(stack))
-
-        # Update the transitions for the current state
-        t = M.d[curr_s]
-
-        # Check the DPDA configuration
-        x1 = curr_s in M.F
-        x2 = s[i:] == ""
-        x3 = len(stack) == 0
-        accept = x1 and x2 and x3
-
-        if (accept):
-            return (True, configs)
-
-        if (x2 and not (x2 or x3)):
-            return (False, configs)
-
         # Set stream pointer and lookahead
         if (i != len(s)):
             curr_sym = s[i]
@@ -299,6 +278,29 @@ def process_s(M, s):
             stack_top = stack[-1]
         else:
             stack_top = "-"
+
+        # Update the transitions for the current state
+        t = M.d[curr_s]
+
+        # Check the DPDA configuration
+        x1 = curr_s in M.F
+        x2 = s[i:] == ""
+        x3 = len(stack) == 0
+        x4 = stack_top == '$'
+        stop = ((x1 and x2 and x3 and not x4) 
+                or (x1 and not x2 and x3 and not x4)
+                or (not x1 and x2 and not x3 and not x4))
+        accept = x1 and x2 and x3
+
+        # Update configurations string
+        if (s[i:] == ""):
+            configs += "(q{0};eps;{1})".format(curr_s, stack_to_str(stack))
+        else:
+            configs += "(q{0};{1};{2})".format(curr_s, s[i:], stack_to_str(stack))
+
+        # Check if able to return
+        if (stop):
+            return (accept, configs)
 
         # Choose a transition to make from current state
         for it in t:
@@ -317,7 +319,7 @@ def process_s(M, s):
                 curr_s = r
 
                 # 2) advance stream pointer if input is matched
-                if ((c == 3 or c == 4) and i < len(s)):
+                if ((c == 3 or c == 4) and i <= len(s)):
                     i += 1
 
                 # 3) update the stack if stack is matched
@@ -330,12 +332,7 @@ def process_s(M, s):
                         stack.append(char)
 
                 # 5) update configs with transition taken
-                if (c == 1):
-                    configs += "--[eps,eps->{0}]-->".format(w)
-                elif (c == 3):
-                    configs += "--[{0},eps->{1}]-->".format(a, w)
-                else:
-                    configs += "--[{0},{1}->eps]-->".format(a, t)
+                configs += "--" + M.trans_to_str(it) + "-->"
                 break
 
             # Next check if skip input read and match stack rule exists
@@ -352,7 +349,7 @@ def process_s(M, s):
                         stack.append(char)
 
                 # 4) update configs with transition taken
-                configs += "--[eps,{0}->eps]-->".format(t)
+                configs += "--" + M.trans_to_str(it) + "-->"
                 break
 
             # If no transition is possible and there's input to read, stop computation
@@ -366,10 +363,11 @@ def main():
     M.get_all_transitions()
     M.print_all_transitions()
 
-    s = input("Enter an input string to be processed by the PDA : ")
-    ret = process_s(M, s)
-    print("Accept string {0}?".format(s), ret[0])
-    print(ret[1])
+    while (True):
+        s = input("Enter an input string to be processed by the PDA : ")
+        ret = process_s(M, s)
+        print("Accept string {0}?".format(s), ret[0])
+        print(ret[1])
     
 
 if __name__ == '__main__':
