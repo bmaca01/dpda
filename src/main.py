@@ -4,15 +4,6 @@ CS 341-005
 Benedikt Macaro
 DPDA simulator
 '''
-#TODO:
-'''
-Code consistency:
-- 's' or "s"?
-- where to break long strings?
-- consistent design?
-- strict typing?
-- pure functions?
-'''
 
 class DPDA:
     """
@@ -37,16 +28,16 @@ class DPDA:
         Prompts user to set Q, SIG, GAM, F.
         return void
         """
-        # TODO: input validation: (ano pa ba?)
 
+        # Get states
         while (self.Q == -1):
             try:
                 self.Q = int(input("Enter number of states :\n"))
             except:
                 print("Invalid input: number of states must be int")
 
+        # Get input alphabet
         while (self.SIG == -1):
-            #TODO: allow symbols |a| > 1 ??
             tmp = set(input(
                 "Enter input alphabet as a"
                 + " comma-separated list of symbols :\n").strip().split(","))
@@ -63,6 +54,7 @@ class DPDA:
 
         self.GAM = self.SIG | self.GAM
 
+        # Get accept states
         while (self.F == -1):
             # For all accept states, delimit by comma, convert to int, store in list.
             try:
