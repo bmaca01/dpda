@@ -44,12 +44,15 @@ class DPDA:
             if ("" in tmp):
                 print("Input alphabet can't be empty")
                 continue
+            # ALLOW '$' and '-'
+            '''
             if ("$" in tmp):
                 print("Can't have '$' as a symbol")
                 continue
             if ('-' in tmp):
                 print("Can't have '-' as a symbol")
                 continue
+            '''
             self.SIG = tmp
 
         self.GAM = self.SIG | self.GAM
@@ -105,20 +108,70 @@ class DPDA:
                 self.print_transitions(i)
                 tmp = input("Need a transition rule for state {0} ? (y or n)"
                             .format(i))
+
                 if (tmp == "n"):
                     # Needed for checking final state in process()
                     if (i not in self.d):
                         # Set the transition to have empty list in dictionary
                         self.d[i] = []
                     break
+
                 elif (tmp == "y"):
                     self.get_transition(i)
+
                 else:
                     print("Invalid input: must be 'y' or 'n'")
         return
 
     def get_transition(self, q):
         '''
+        Prompts user to add transition rule for q.
+        Checks if able to add the transition.
+        If able, returns tuple (a,t,r,w,c)
+        '''
+        a, t, r, w, c = -1, -1, -1, -1, -1
+        SIG_e = set("-") | self.SIG
+
+        while (a not in SIG_e):
+            a = input("Input Symbol to read (enter - for epsilon): ")
+            if (a not in SIG_e or len(a) > 1):
+                print("Invalid input: symbol not in alphabet")
+
+        while (t not in GAM_e):
+            t = input("Stack symbol to match and pop (enter - for epsilon): ")
+            if (t not in GAM_e or len(a) > 1):
+                print("Invalid input: symbol not in stack alphabet")
+
+        while (r not in range(self.Q)):
+            try:
+                    r = int(input("State to transition to : "))
+                    if (r not in range(self.Q)):
+                        print("Invalid input: input greater than", self.Q)
+            except:
+                print("Invalid input: state must be integer")
+
+        while (w == -1):
+            # TODO: Need to make sure stack symbols being pushed are in the alphabet
+            tmp = input(
+                "Stack symbols to push as comma separated list, "
+                + "first symbol to top of stack (enter - for ep"
+                + "silon): ")
+            tmp_s = set(tmp.replace(",", ""))
+            if ("-" in tmp and len(tmp) > 1):
+                print("Invalid input: invalid string")
+            if (tmp_s & GAM_e == tmp_s):
+                w = tmp
+            else:
+                print("Invalid input: invalid string")
+
+        c = self.condition(a, t)
+        if (self.valid(q, (a, t, r, w, c))):
+            self.add_transition(q, (a, t, r, w, c))
+        return
+
+    def get_transition_strict(self, q):
+        '''
+        STRICT: REQUIRES STACK ALPHABET == INPUT ALPHABET
         Prompts user to add transition rule for q.
         Checks if able to add the transition.
         If able, returns tuple (a,t,r,w,c)
