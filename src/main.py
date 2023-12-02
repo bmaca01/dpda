@@ -43,15 +43,6 @@ class DPDA:
             if (tmp == ""):
                 print("Input alphabet can't be empty")
                 continue
-            # ALLOW '$' and '-'
-            '''
-            if ("$" in tmp):
-                print("Can't have '$' as a symbol")
-                continue
-            if ('-' in tmp):
-                print("Can't have '-' as a symbol")
-                continue
-            '''
             self.SIG = tmp
 
         self.GAM = self.SIG | self.GAM
@@ -80,13 +71,19 @@ class DPDA:
         a = tup[0]
         t = tup[1]
         w = tup[3]
-        if (a == "-"):
+        b = ""
+        if (a == ""):
             a = "eps"
-        if (t == "-"):
+        if (t == ""):
             t = "eps"
-        if (w == "-"):
-            w = "eps"
-        return "[{0},{1}->{2}]".format(a, t, w)
+
+        for x in w:
+            b += x
+
+        if (b == ""):
+            b = "eps"
+
+        return "[{0},{1}->{2}]".format(a, t, b)
 
     def print_transitions(self, q):
         print("Transitions for state {0}:".format(q))
@@ -129,14 +126,23 @@ class DPDA:
         If able, returns tuple (a,t,r,w,c)
         '''
         a, t, r, w, c = -1, -1, -1, -1, -1
-        SIG_e = set("-") | self.SIG
+        eps = "-"
+        minus = "--"
 
         # Get input symbol a
-        while (a not in SIG_e):
+        while (a not in self.SIG):
             a = input(
                     "Input Symbol to read "
                     + "(enter - for epsilon, enter -- for '-'): ")
-            if (a not in SIG_e or len(a) > 1):
+
+            if (a == eps):
+                a = ""
+                break
+
+            if (a == minus):
+                a = "-"
+
+            if (a not in self.SIG):
                 print("Invalid input: symbol not in alphabet")
 
         # Get stack match t
@@ -144,8 +150,16 @@ class DPDA:
             t = input(
                     "Stack symbol to match and pop "
                     + "(enter - for epsilon, enter -- for '-'): ")
+
+            if (t == eps):
+                t = ""
+                break
+            
+            if (t == minus):
+                t = "-"
+
             if (t not in self.GAM):
-                #print("Invalid input: symbol not in stack alphabet")
+                self.GAM.add(t)
 
         # Get next state r
         while (r not in range(self.Q)):
@@ -158,69 +172,31 @@ class DPDA:
 
         # Get stack symbol(s) to push w
         while (w == -1):
-            # TODO: Need to make sure stack symbols being pushed are in the alphabet
+            # PRONE TO BREAKING no string validation
             tmp = input(
                 "Stack symbols to push as comma separated list, "
                 + "first symbol to top of stack "
                 + "(enter - for epsilon, enter -- for '-'): ")
-            tmp_s = set(tmp.replace(",", ""))
+            if (tmp == eps):
+                w = [""]
+                break
 
-            if ("-" in tmp and len(tmp) > 1):
-                print("Invalid input: invalid string")
-
-            if (tmp_s & GAM_e == tmp_s):
-                w = tmp
+            if (tmp == minus):
+                w = ["-"]
 
             else:
-                print("Invalid input: invalid string")
+                l = []
+                for s in tmp.split(","):
+                    if (s == minus):
+                        l.append("-")
+                    else:
+                        l.append(s)
 
-        c = self.condition(a, t)
-        if (self.valid(q, (a, t, r, w, c))):
-            self.add_transition(q, (a, t, r, w, c))
-        return
+                # Add new symbols from tmp to GAM
+                self.GAM = self.GAM | set(l)
 
-    def get_transition_strict(self, q):
-        '''
-        STRICT: REQUIRES STACK ALPHABET == INPUT ALPHABET
-        Prompts user to add transition rule for q.
-        Checks if able to add the transition.
-        If able, returns tuple (a,t,r,w,c)
-        '''
-        a, t, r, w, c = -1, -1, -1, -1, -1
-        SIG_e = set("-") | self.SIG
-        GAM_e = set("-") | self.GAM
-
-        while (a not in SIG_e):
-            a = input("Input Symbol to read (enter - for epsilon): ")
-            if (a not in SIG_e or len(a) > 1):
-                print("Invalid input: symbol not in alphabet")
-
-        while (t not in GAM_e):
-            t = input("Stack symbol to match and pop (enter - for epsilon): ")
-            if (t not in GAM_e or len(a) > 1):
-                print("Invalid input: symbol not in stack alphabet")
-
-        while (r not in range(self.Q)):
-            try:
-                    r = int(input("State to transition to : "))
-                    if (r not in range(self.Q)):
-                        print("Invalid input: input greater than", self.Q)
-            except:
-                print("Invalid input: state must be integer")
-
-        while (w == -1):
-            # TODO: Need to make sure stack symbols being pushed are in the alphabet
-            tmp = input(
-                "Stack symbols to push as comma separated list, "
-                + "first symbol to top of stack (enter - for ep"
-                + "silon): ")
-            tmp_s = set(tmp.replace(",", ""))
-            if ("-" in tmp and len(tmp) > 1):
-                print("Invalid input: invalid string")
-            if (tmp_s & GAM_e == tmp_s):
-                w = tmp
-            else:
-                print("Invalid input: invalid string")
+                # Set w to l
+                w = l
 
         c = self.condition(a, t)
         if (self.valid(q, (a, t, r, w, c))):
@@ -239,11 +215,11 @@ class DPDA:
         helper function
         determine which condition for transition being added
         '''
-        if (sym_read == '-' and stack_top == '-'):
+        if (sym_read == '' and stack_top == ''):
             return 1
-        elif (sym_read == '-' and stack_top != '-'):
+        elif (sym_read == '' and stack_top != ''):
             return 2
-        elif (sym_read != '-' and stack_top == '-'):
+        elif (sym_read != '' and stack_top == ''):
             return 3
         return 4
 
@@ -253,19 +229,19 @@ class DPDA:
         takes in state and tuple.
         Lookup in d for transitions
         compares trans tuple to existing transitions in d
-        return 0: valid, not 0: invalid specific errors
         '''
         if (q not in self.d):
             return True
 
         for t in self.d[q]:
-            # The given output is WRONG lmao but this is to match it ;-;
+            # eps, eps transition only allowed rule
             if (t[4] == 1):
                 print("Violation of DPDA due to epsilon input/epsilon"
                       + " stack transition from state {0}:".format(q)
                       + self.trans_to_str(t))
                 return False
 
+            # check duplicate (a, t) pairs
             elif ((t[0] == trans[0]) and (t[1] == trans[1])):
                 print("Violation of DPDA due to multiple transitions"
                       + " for the same input and "
@@ -273,9 +249,9 @@ class DPDA:
                       + self.trans_to_str(t))
                 return False
 
+            # check duplicate a if adding epsilon stack or exists epsilon stack
             elif ((trans[4] == 1)
-                  or (t[0] == trans[0])
-                  or (t[1] == trans[1])):
+                    or (t[0] == trans[0] and (trans[1] == "" or t[1] == "")):
                 print("Violation of DPDA due to epsilon stack"
                       + " transition from state {0}:".format(q)
                       + self.trans_to_str(t))
@@ -293,9 +269,6 @@ def stack_to_str(l):
     return rtn[::-1]
 
 def process_s(M, s): 
-    '''
-    This shit is so messy LMAO
-    '''
     stack = []              # DPDA Stack
     curr_s = 0              # DPDA State
     curr_sym = "-"          # Current "token"
