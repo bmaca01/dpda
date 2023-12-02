@@ -28,7 +28,6 @@ class DPDA:
         Prompts user to set Q, SIG, GAM, F.
         return void
         """
-
         # Get states
         while (self.Q == -1):
             try:
@@ -132,16 +131,23 @@ class DPDA:
         a, t, r, w, c = -1, -1, -1, -1, -1
         SIG_e = set("-") | self.SIG
 
+        # Get input symbol a
         while (a not in SIG_e):
-            a = input("Input Symbol to read (enter - for epsilon): ")
+            a = input(
+                    "Input Symbol to read "
+                    + "(enter - for epsilon, enter -- for '-'): ")
             if (a not in SIG_e or len(a) > 1):
                 print("Invalid input: symbol not in alphabet")
 
-        while (t not in GAM_e):
-            t = input("Stack symbol to match and pop (enter - for epsilon): ")
-            if (t not in GAM_e or len(a) > 1):
-                print("Invalid input: symbol not in stack alphabet")
+        # Get stack match t
+        while (t not in self.GAM):
+            t = input(
+                    "Stack symbol to match and pop "
+                    + "(enter - for epsilon, enter -- for '-'): ")
+            if (t not in self.GAM):
+                #print("Invalid input: symbol not in stack alphabet")
 
+        # Get next state r
         while (r not in range(self.Q)):
             try:
                     r = int(input("State to transition to : "))
@@ -150,17 +156,21 @@ class DPDA:
             except:
                 print("Invalid input: state must be integer")
 
+        # Get stack symbol(s) to push w
         while (w == -1):
             # TODO: Need to make sure stack symbols being pushed are in the alphabet
             tmp = input(
                 "Stack symbols to push as comma separated list, "
-                + "first symbol to top of stack (enter - for ep"
-                + "silon): ")
+                + "first symbol to top of stack "
+                + "(enter - for epsilon, enter -- for '-'): ")
             tmp_s = set(tmp.replace(",", ""))
+
             if ("-" in tmp and len(tmp) > 1):
                 print("Invalid input: invalid string")
+
             if (tmp_s & GAM_e == tmp_s):
                 w = tmp
+
             else:
                 print("Invalid input: invalid string")
 
