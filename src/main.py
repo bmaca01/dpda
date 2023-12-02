@@ -41,7 +41,7 @@ class DPDA:
             tmp = set(input(
                 "Enter input alphabet as a"
                 + " comma-separated list of symbols :\n").strip().split(","))
-            if ("" in tmp):
+            if (tmp == ""):
                 print("Input alphabet can't be empty")
                 continue
             # ALLOW '$' and '-'
