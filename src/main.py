@@ -251,7 +251,8 @@ class DPDA:
 
             # check duplicate a if adding epsilon stack or exists epsilon stack
             elif ((trans[4] == 1)
-                    or (t[0] == trans[0] and (trans[1] == "" or t[1] == "")):
+                    or (t[0] == trans[0] 
+                        and ((trans[1] == "") or (t[1] == "")))):
                 print("Violation of DPDA due to epsilon stack"
                       + " transition from state {0}:".format(q)
                       + self.trans_to_str(t))
@@ -271,9 +272,9 @@ def stack_to_str(l):
 def process_s(M, s): 
     stack = []              # DPDA Stack
     curr_s = 0              # DPDA State
-    curr_sym = "-"          # Current "token"
+    curr_sym = ""          # Current "token"
     next_sym = ""           # Next "token"
-    stack_top = "-"         # Stack top
+    stack_top = ""         # Stack top
     configs = ""
 
     '''
@@ -294,18 +295,18 @@ def process_s(M, s):
         if (i != len(s)):
             curr_sym = s[i]
         else:
-            curr_sym = "-"
+            curr_sym = ""
 
         if (i + 1 < len(s)):
             next_sym = s[i + 1]
         else:
-            next_sym = "-"
+            next_sym = ""
 
         # Set stack pointer if stack not empty
         if (len(stack) > 0):
             stack_top = stack[-1]
         else:
-            stack_top = "-"
+            stack_top = ""
 
         # Update the transitions for the current state
         t = M.d[curr_s]
@@ -355,9 +356,10 @@ def process_s(M, s):
                     stack.pop()
 
                 # 4) push symbols from transition on to stack
-                if (w != "-"):
-                    for char in w[::-1]:
-                        stack.append(char)
+                for sym in w[::-1]:
+                    if sym == "":
+                        break
+                    stack.append(sym)
 
                 # 5) update configs with transition taken
                 configs += "--" + M.trans_to_str(it) + "-->"
@@ -372,9 +374,10 @@ def process_s(M, s):
                 stack.pop()
 
                 # 3) push symbols from transition on to stack
-                if (w != "-"):
-                    for char in w[::-1]:
-                        stack.append(char)
+                for sym in w[::-1]:
+                    if sym == "":
+                        break
+                    stack.append(sym)
 
                 # 4) update configs with transition taken
                 configs += "--" + M.trans_to_str(it) + "-->"
