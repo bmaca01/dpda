@@ -5,5 +5,5 @@ Implementing a DPDA simulator in python.
 Requires python version >= 3.9.2
 
 usage: <br>
-`$ python3 main.py` <br>
+`$ python3 main.py` or <br>
 `$ ./main.py`
