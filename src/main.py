@@ -269,23 +269,39 @@ def stack_to_str(l):
         rtn += it
     return rtn
 
+def get_path(curr_sym, stack_top, trans_ls):
+    sz = len(trans_ls)
+    # If only transition is eps, eps
+    if (sz == 1 and trans_ls[0][4] == 1):
+        return 0
+
+    # Find matching transition
+    for i in range(sz):
+        if (curr_sym == trans_ls[i][0] or stack_top == trans[i][1]):
+            return i
+
+    # Return case if no match found
+    return -1
+
 def process_s(M, s): 
     stack = []              # DPDA Stack
     curr_s = 0              # DPDA State
-    curr_sym = ""          # Current "token"
-    next_sym = ""           # Next "token"
-    stack_top = ""         # Stack top
+    curr_sym = ""           # Current char
+    next_sym = ""           # Next char
+    stack_top = ""          # Stack top
     configs = ""
 
     '''
-    x1: q_i in F        := In accepting state
-    x2: s[i:] == ''     := Done reading input
-    x3: stack == []     := Stack is empty
-    accept: x1 and x2 and x3
+    x1: q_i in F            := In accepting state
+    x2: s[i:] == ''         := Done reading input
+    x3: stack == []         := Stack is empty
+    x4: get_path() == -1    := There does not exist a path to take
+    accept: x1 and x2 and x3 and not x4
     '''
     x1 = False
     x2 = False
     x3 = True
+    x4 = True
     accept = False
 
     # Start computation loop
@@ -311,14 +327,15 @@ def process_s(M, s):
         # Update the transitions for the current state
         t = M.d[curr_s]
 
+        # Get index of transition to take
+        idx = get_path(curr_sym, stack_top, t)
+
         # Check the DPDA configuration
         x1 = curr_s in M.F
         x2 = s[i:] == ""
         x3 = len(stack) == 0
-        x4 = stack_top == '$'
-        stop = ((x1 and x2 and x3 and (not x4)) 
-                or (x1 and (not x2) and x3 and (not x4))
-                or ((not x1) and x2 and (not x3) and (not x4)))
+        x4 = idx == -1
+        stop = (x1 and x2 and x3) or x4
         accept = x1 and x2 and x3
 
         # Update configurations string
@@ -332,60 +349,36 @@ def process_s(M, s):
             return (accept, configs)
 
         # Choose a transition to make from current state
-        for it in t:
-            a = it[0]
-            t = it[1]
-            r = it[2]
-            w = it[3]
-            c = it[4]
+        t_func = t[idx]     # Transition tuple to take
+        t_r = t_func[2]
+        t_w = t_func[3]
+        t_c = t_func[4]
 
-            # First check if eps, eps rule exists or check if input match rule exists
-            if (    c == 1 
-                    or (c == 3 and curr_sym == a)
-                    or (c == 4 and curr_sym == a and stack_top == t)):
+        # 1) move to next state
+        curr_s = t_r
 
-                # 1) move to next state
-                curr_s = r
+        # 2) advance stream pointer if input is matched
+        if ((t_c == 3 or t_c == 4) and i <= len(s)):
+            i += 1
 
-                # 2) advance stream pointer if input is matched
-                if ((c == 3 or c == 4) and i <= len(s)):
-                    i += 1
+        # 3) update the stack if stack is matched
+        if (t_c == 2 or t_c == 4):
+            stack.pop()
 
-                # 3) update the stack if stack is matched
-                if (c == 4):
-                    stack.pop()
-
-                # 4) push symbols from transition on to stack
-                for sym in w[::-1]:
-                    if (sym == ""):
-                        break
-                    stack.append(sym)
-
-                # 5) update configs with transition taken
-                configs += "--" + M.trans_to_str(it) + "-->"
+        # 4) push symbols from transition on to stack
+        for sym in t_w[::-1]:
+            if (sym == ""):
                 break
+            stack.append(sym)
 
-            # Next check if skip input read and match stack rule exists
-            elif (c == 2 and stack_top == t):
-                # 1) move to next state
-                curr_s = r
+        # 5) update configs with transition taken
+        configs += "--" + M.trans_to_str(it) + "-->"
 
-                # 2) update the stack
-                stack.pop()
-
-                # 3) push symbols from transition on to stack
-                for sym in w[::-1]:
-                    if (sym == ""):
-                        break
-                    stack.append(sym)
-
-                # 4) update configs with transition taken
-                configs += "--" + M.trans_to_str(it) + "-->"
-                break
-
+        '''
             # If no transition is possible and there's input to read, stop computation
             elif (x2 and it == t[-1]):
                 return (False, configs)
+        '''
 
 def main():
     # Set up DPDA through user input
