@@ -316,9 +316,9 @@ def process_s(M, s):
         x2 = s[i:] == ""
         x3 = len(stack) == 0
         x4 = stack_top == '$'
-        stop = ((x1 and x2 and x3 and not x4) 
-                or (x1 and not x2 and x3 and not x4)
-                or (not x1 and x2 and not x3 and not x4))
+        stop = ((x1 and x2 and x3 and (not x4)) 
+                or (x1 and (not x2) and x3 and (not x4))
+                or ((not x1) and x2 and (not x3) and (not x4)))
         accept = x1 and x2 and x3
 
         # Update configurations string
@@ -357,7 +357,7 @@ def process_s(M, s):
 
                 # 4) push symbols from transition on to stack
                 for sym in w[::-1]:
-                    if sym == "":
+                    if (sym == ""):
                         break
                     stack.append(sym)
 
@@ -375,7 +375,7 @@ def process_s(M, s):
 
                 # 3) push symbols from transition on to stack
                 for sym in w[::-1]:
-                    if sym == "":
+                    if (sym == ""):
                         break
                     stack.append(sym)
 
