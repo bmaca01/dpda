@@ -265,9 +265,9 @@ def stack_to_str(l):
     # If the stack is empty
     if (not l):
         return "eps"
-    for it in l:
+    for it in l[::-1]:
         rtn += it
-    return rtn[::-1]
+    return rtn
 
 def process_s(M, s): 
     stack = []              # DPDA Stack
