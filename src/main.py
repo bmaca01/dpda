@@ -277,7 +277,12 @@ def get_path(curr_sym, stack_top, trans_ls):
 
     # Find matching transition
     for i in range(sz):
-        if (curr_sym == trans_ls[i][0] or stack_top == trans[i][1]):
+        a = trans_ls[i][0]
+        t = trans_ls[i][1]
+        c = trans_ls[i][4]
+        if ((curr_sym == a and c == 3) 
+                or (stack_top == t and c == 2)
+                or (curr_sym == a and stack_top == t and c == 4)):
             return i
 
     # Return case if no match found
@@ -372,13 +377,7 @@ def process_s(M, s):
             stack.append(sym)
 
         # 5) update configs with transition taken
-        configs += "--" + M.trans_to_str(it) + "-->"
-
-        '''
-            # If no transition is possible and there's input to read, stop computation
-            elif (x2 and it == t[-1]):
-                return (False, configs)
-        '''
+        configs += "--" + M.trans_to_str(t_func) + "-->"
 
 def main():
     # Set up DPDA through user input
@@ -393,6 +392,5 @@ def main():
         print("Accept string {0}?".format(s), ret[0])
         print(ret[1])
     
-
 if __name__ == '__main__':
     main();
