@@ -290,6 +290,55 @@ class TestAPIEndpoints:
         assert "states" in data["data"]
         assert data["version"] == "1.0"
 
+    def test_epsilon_transitions_with_null_stack(self, client, sample_dpda_id):
+        """Test epsilon transitions with null stack_top."""
+        # Setup DPDA with epsilon transitions
+        client.post(f"/api/dpda/{sample_dpda_id}/states", json={
+            "states": ["q0", "q1", "q2"],
+            "initial_state": "q0",
+            "accept_states": ["q2"]
+        })
+        client.post(f"/api/dpda/{sample_dpda_id}/alphabets", json={
+            "input_alphabet": ["a", "b"],
+            "stack_alphabet": ["$", "A"],
+            "initial_stack_symbol": "$"
+        })
+
+        # Add epsilon transition with null stack_top (should not check stack)
+        response = client.post(f"/api/dpda/{sample_dpda_id}/transition", json={
+            "from_state": "q0",
+            "input_symbol": None,  # epsilon input
+            "stack_top": None,     # epsilon stack (no stack check)
+            "to_state": "q1",
+            "stack_push": ["A"]    # Push A on top of existing stack
+        })
+        assert response.status_code == 200
+
+        # Add regular transition
+        client.post(f"/api/dpda/{sample_dpda_id}/transition", json={
+            "from_state": "q1",
+            "input_symbol": "a",
+            "stack_top": "A",
+            "to_state": "q2",
+            "stack_push": []
+        })
+
+        # Validate should pass with epsilon transitions
+        response = client.post(f"/api/dpda/{sample_dpda_id}/validate")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["is_valid"] is True, f"Validation failed: {data.get('violations', [])}"
+
+        # Test computation
+        response = client.post(
+            f"/api/dpda/{sample_dpda_id}/compute",
+            json={"input_string": "a", "show_trace": True}
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["accepted"] is True
+        assert data["final_state"] == "q2"
+
     def test_visualize_endpoint(self, client, sample_dpda_id):
         """Test DPDA visualization."""
         # Setup DPDA

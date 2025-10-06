@@ -215,14 +215,14 @@ class DPDASession:
         self.is_modified = True
 
     def add_transition(self, from_state: str, input_symbol: Optional[str],
-                      stack_top: str, to_state: str, stack_push: str) -> None:
+                      stack_top: Optional[str], to_state: str, stack_push: str) -> None:
         """
         Add a transition to current DPDA.
 
         Args:
             from_state: Source state
             input_symbol: Input symbol (None for epsilon)
-            stack_top: Stack symbol to match
+            stack_top: Stack symbol to match (None for epsilon - no stack check)
             to_state: Target state
             stack_push: Stack symbols to push
         """

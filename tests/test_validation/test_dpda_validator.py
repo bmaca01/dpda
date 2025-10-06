@@ -92,6 +92,30 @@ class TestDPDAValidator:
         assert result.is_valid is False
         assert any('property (b)' in error.lower() for error in result.errors)
 
+    def test_epsilon_transition_with_null_stack_top(self):
+        """Test that epsilon transitions with None stack_top are valid."""
+        transitions = [
+            # Epsilon transition with None stack_top (should not check stack)
+            Transition('q0', None, None, 'q1', 'A,$'),
+            Transition('q1', 'a', 'A', 'q2', ''),
+        ]
+
+        dpda = DPDADefinition(
+            states={'q0', 'q1', 'q2'},
+            input_alphabet={'a'},
+            stack_alphabet={'$', 'A'},
+            initial_state='q0',
+            initial_stack_symbol='$',
+            accept_states={'q2'},
+            transitions=transitions
+        )
+
+        result = self.validator.validate(dpda)
+
+        # This should be valid - None stack_top means no stack check
+        assert result.is_valid is True, f"Validation failed: {result.errors}"
+        assert len(result.errors) == 0
+
     def test_property_c_violation(self):
         """Test detection of multiple epsilon transitions with same stack top."""
         transitions = [

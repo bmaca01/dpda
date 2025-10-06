@@ -166,7 +166,7 @@ async def add_transition(dpda_id: str, request: AddTransitionRequest):
         if request.stack_push:
             stack_push = ",".join(request.stack_push)
         else:
-            stack_push = None
+            stack_push = ""  # Empty string for no push, not None
 
         session.add_transition(
             from_state=request.from_state,

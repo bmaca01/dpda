@@ -13,7 +13,7 @@ class Transition:
         self,
         from_state: str,
         input_symbol: Optional[str],
-        stack_top: str,
+        stack_top: Optional[str],
         to_state: str,
         stack_push: str
     ):
@@ -23,7 +23,7 @@ class Transition:
         Args:
             from_state: Source state
             input_symbol: Input symbol to read (None for epsilon)
-            stack_top: Symbol that must be on top of stack
+            stack_top: Symbol that must be on top of stack (None for epsilon - no stack check)
             to_state: Destination state
             stack_push: String to push onto stack (empty string means pop)
         """

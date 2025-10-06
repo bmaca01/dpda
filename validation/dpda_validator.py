@@ -79,7 +79,7 @@ class DPDAValidator:
         errors = []
 
         # Group transitions by (from_state, stack_top)
-        state_stack_groups: Dict[Tuple[str, str], List[Transition]] = {}
+        state_stack_groups: Dict[Tuple[str, Optional[str]], List[Transition]] = {}
         for trans in dpda.transitions:
             key = (trans.from_state, trans.stack_top)
             if key not in state_stack_groups:
@@ -153,8 +153,8 @@ class DPDAValidator:
                     f"Property (d) violation: Transition uses invalid input symbol '{trans.input_symbol}'"
                 )
 
-            # Check stack top
-            if trans.stack_top not in dpda.stack_alphabet:
+            # Check stack top (None is valid for epsilon transitions)
+            if trans.stack_top is not None and trans.stack_top not in dpda.stack_alphabet:
                 errors.append(
                     f"Property (d) violation: Transition uses invalid stack symbol '{trans.stack_top}'"
                 )
