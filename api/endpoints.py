@@ -69,6 +69,33 @@ async def create_dpda(request: CreateDPDARequest):
         raise HTTPException(status_code=400, detail=str(e))
 
 
+@app.get("/api/dpda/list", response_model=ListDPDAsResponse)
+async def list_dpdas():
+    """List all DPDAs."""
+    dpda_list = []
+    for dpda_id, session in sessions.items():
+        builder = session.get_current_builder()
+        is_valid = False
+
+        # Check validity if possible
+        try:
+            if builder.states and builder.initial_state:
+                dpda = session.build_current_dpda()
+                validator = DPDAValidator()
+                result = validator.validate(dpda)
+                is_valid = result.is_valid
+        except:
+            pass
+
+        dpda_list.append({
+            "id": dpda_id,
+            "name": session.current_dpda_name or "unnamed",
+            "is_valid": is_valid
+        })
+
+    return ListDPDAsResponse(dpdas=dpda_list, count=len(dpda_list))
+
+
 @app.get("/api/dpda/{dpda_id}", response_model=DPDAInfoResponse)
 async def get_dpda_info(dpda_id: str):
     """Get information about a DPDA."""
@@ -194,7 +221,7 @@ async def delete_transition(dpda_id: str, index: int):
         return DeleteTransitionResponse(
             deleted=True,
             message="Transition removed successfully",
-            remaining_transitions=len(session.current_builder.transitions)
+            remaining_transitions=len(session.get_current_builder().transitions)
         )
     except (SessionError, IndexError) as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -322,33 +349,6 @@ async def visualize_dpda(dpda_id: str, format: str = Query("dot", description="V
             raise HTTPException(status_code=400, detail=f"Unsupported format: {format}")
     except SessionError as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
-@app.get("/api/dpda/list", response_model=ListDPDAsResponse)
-async def list_dpdas():
-    """List all DPDAs."""
-    dpda_list = []
-    for dpda_id, session in sessions.items():
-        builder = session.current_builder
-        is_valid = False
-
-        # Check validity if possible
-        try:
-            if builder.states and builder.initial_state:
-                dpda = session.build_current_dpda()
-                validator = DPDAValidator()
-                result = validator.validate(dpda)
-                is_valid = result.is_valid
-        except:
-            pass
-
-        dpda_list.append({
-            "id": dpda_id,
-            "name": session.current_dpda_name or "unnamed",
-            "is_valid": is_valid
-        })
-
-    return ListDPDAsResponse(dpdas=dpda_list, count=len(dpda_list))
 
 
 @app.delete("/api/dpda/{dpda_id}")

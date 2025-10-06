@@ -282,8 +282,10 @@ class CLIInterface:
 
                 transitions.append(trans)
                 # Update stack alphabet if new symbols introduced
-                if trans.stack_push:
-                    for symbol in trans.stack_push:
+                if trans.stack_push and trans.stack_push != '-':
+                    # Split by comma to get individual symbols
+                    symbols = trans.stack_push.split(',')
+                    for symbol in symbols:
                         stack_alphabet.add(symbol)
 
         return transitions
@@ -409,15 +411,72 @@ class CLIInterface:
             )
             print(trace)
         elif result.trace:
-            # For real ComputationResult - format the trace
+            # For real ComputationResult - format the trace with transitions
             trace_str = ""
             for i, config in enumerate(result.trace):
                 trace_str += self.formatter.format_configuration(config)
                 if i < len(result.trace) - 1:
-                    trace_str += "-->"
+                    # Try to find the transition that was taken
+                    curr_config = result.trace[i]
+                    next_config = result.trace[i + 1]
+                    transition_str = self._find_transition_between_configs(
+                        dpda, curr_config, next_config
+                    )
+                    trace_str += f"--{transition_str}-->"
             print(trace_str)
 
         return True
+
+    def _find_transition_between_configs(
+        self,
+        dpda,
+        curr_config: 'Configuration',
+        next_config: 'Configuration'
+    ) -> str:
+        """
+        Find and format the transition taken between two configurations.
+
+        Args:
+            dpda: The DPDA definition
+            curr_config: Current configuration
+            next_config: Next configuration
+
+        Returns:
+            Formatted transition string like "[a,$->X]"
+        """
+        # Determine what input was consumed
+        if len(curr_config.remaining_input) > len(next_config.remaining_input):
+            input_consumed = curr_config.remaining_input[0]
+        else:
+            input_consumed = None  # Epsilon transition
+
+        # Determine what was on stack top
+        if curr_config.stack:
+            stack_top = curr_config.stack[0]
+        else:
+            stack_top = None
+
+        # Find matching transition in DPDA
+        for trans in dpda.transitions:
+            if (trans.from_state == curr_config.state and
+                trans.input_symbol == input_consumed and
+                trans.stack_top == stack_top and
+                trans.to_state == next_config.state):
+                # Found the transition - format it
+                return self.formatter.format_transition(trans)
+
+        # If no exact match found, create a generic transition string
+        input_str = input_consumed if input_consumed else 'eps'
+        stack_str = stack_top if stack_top else 'eps'
+        # Determine what was pushed
+        if len(next_config.stack) > len(curr_config.stack) - 1:
+            # Something was pushed
+            pushed = next_config.stack[:len(next_config.stack) - len(curr_config.stack) + 1]
+            push_str = ','.join(reversed(pushed)) if pushed else 'eps'
+        else:
+            push_str = 'eps'
+
+        return f"[{input_str},{stack_str}->{push_str}]"
 
     def run_interactive_session(self):
         """Run a complete interactive DPDA session."""
