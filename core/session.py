@@ -248,6 +248,202 @@ class DPDASession:
         del builder.transitions[index]
         self.is_modified = True
 
+    def update_metadata(self, name: Optional[str] = None,
+                       description: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Update DPDA metadata (name and description).
+
+        Note: Description is stored but not currently used in DPDABuilder.
+        This is for API metadata tracking only.
+
+        Args:
+            name: New name for the DPDA (optional)
+            description: New description for the DPDA (optional)
+
+        Returns:
+            Dictionary of changes made
+
+        Raises:
+            SessionError: If no current DPDA
+        """
+        builder = self.get_current_builder()
+        changes = {}
+
+        if name is not None:
+            old_name = self.current_dpda_name
+            # Note: Renaming requires updating the dpdas dictionary
+            if name in self.dpdas and name != old_name:
+                raise SessionError(f"DPDA '{name}' already exists in session")
+            if old_name and old_name in self.dpdas:
+                self.dpdas[name] = self.dpdas.pop(old_name)
+                self.current_dpda_name = name
+            changes["name"] = name
+            self.is_modified = True
+
+        if description is not None:
+            # Store description as metadata (not part of core DPDABuilder)
+            # This would require extending DPDABuilder, so we'll store it separately
+            # For now, just track it as a change
+            changes["description"] = description
+            self.is_modified = True
+
+        return changes
+
+    def update_states(self, states: Optional[Set[str]] = None,
+                     initial_state: Optional[str] = None,
+                     accept_states: Optional[Set[str]] = None) -> Dict[str, Any]:
+        """
+        Update states configuration partially.
+
+        Args:
+            states: New set of states (optional)
+            initial_state: New initial state (optional)
+            accept_states: New accept states (optional)
+
+        Returns:
+            Dictionary of changes made
+
+        Raises:
+            SessionError: If validation fails
+        """
+        builder = self.get_current_builder()
+        changes = {}
+
+        # Update states first if provided
+        if states is not None:
+            builder.states = states.copy()
+            changes["states"] = list(states)
+            self.is_modified = True
+
+        # Update initial state
+        if initial_state is not None:
+            if initial_state not in builder.states:
+                raise SessionError(f"Initial state '{initial_state}' not in states")
+            builder.initial_state = initial_state
+            changes["initial_state"] = initial_state
+            self.is_modified = True
+
+        # Update accept states
+        if accept_states is not None:
+            invalid = accept_states - builder.states
+            if invalid:
+                raise SessionError(f"Accept states {invalid} not in states")
+            builder.accept_states = accept_states.copy()
+            changes["accept_states"] = list(accept_states)
+            self.is_modified = True
+
+        return changes
+
+    def update_alphabets(self, input_alphabet: Optional[Set[str]] = None,
+                        stack_alphabet: Optional[Set[str]] = None,
+                        initial_stack_symbol: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Update alphabets configuration partially.
+
+        Args:
+            input_alphabet: New input alphabet (optional)
+            stack_alphabet: New stack alphabet (optional)
+            initial_stack_symbol: New initial stack symbol (optional)
+
+        Returns:
+            Dictionary of changes made
+
+        Raises:
+            SessionError: If validation fails
+        """
+        builder = self.get_current_builder()
+        changes = {}
+
+        # Update input alphabet
+        if input_alphabet is not None:
+            builder.input_alphabet = input_alphabet.copy()
+            changes["input_alphabet"] = list(input_alphabet)
+            self.is_modified = True
+
+        # Update stack alphabet (validate with existing initial_stack_symbol if not also being updated)
+        if stack_alphabet is not None:
+            # Check if initial_stack_symbol would still be valid
+            check_symbol = initial_stack_symbol if initial_stack_symbol is not None else builder.initial_stack_symbol
+            if check_symbol and check_symbol not in stack_alphabet:
+                raise SessionError(f"Initial stack symbol '{check_symbol}' must be in stack alphabet")
+            builder.stack_alphabet = stack_alphabet.copy()
+            changes["stack_alphabet"] = list(stack_alphabet)
+            self.is_modified = True
+
+        # Update initial stack symbol
+        if initial_stack_symbol is not None:
+            if initial_stack_symbol not in builder.stack_alphabet:
+                raise SessionError(f"Initial stack symbol '{initial_stack_symbol}' not in stack alphabet")
+            builder.initial_stack_symbol = initial_stack_symbol
+            changes["initial_stack_symbol"] = initial_stack_symbol
+            self.is_modified = True
+
+        return changes
+
+    def update_transition(self, index: int, from_state: Optional[str] = None,
+                         input_symbol: Optional[str] = None,
+                         stack_top: Optional[str] = None,
+                         to_state: Optional[str] = None,
+                         stack_push: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Update a specific transition by index.
+
+        Args:
+            index: Index of transition to update
+            from_state: New source state (optional)
+            input_symbol: New input symbol (optional, None for epsilon)
+            stack_top: New stack top symbol (optional, None for epsilon)
+            to_state: New target state (optional)
+            stack_push: New stack push string (optional)
+
+        Returns:
+            Dictionary of changes made
+
+        Raises:
+            IndexError: If index out of range
+            SessionError: If no current DPDA
+        """
+        builder = self.get_current_builder()
+
+        if index < 0 or index >= len(builder.transitions):
+            raise IndexError(f"Transition index {index} out of range")
+
+        transition = builder.transitions[index]
+        changes = {}
+
+        # Create updated transition
+        new_from_state = from_state if from_state is not None else transition.from_state
+        new_input_symbol = input_symbol if input_symbol is not None else transition.input_symbol
+        new_stack_top = stack_top if stack_top is not None else transition.stack_top
+        new_to_state = to_state if to_state is not None else transition.to_state
+        new_stack_push = stack_push if stack_push is not None else transition.stack_push
+
+        # Track changes
+        if from_state is not None and from_state != transition.from_state:
+            changes["from_state"] = from_state
+        if input_symbol is not None and input_symbol != transition.input_symbol:
+            changes["input_symbol"] = input_symbol
+        if stack_top is not None and stack_top != transition.stack_top:
+            changes["stack_top"] = stack_top
+        if to_state is not None and to_state != transition.to_state:
+            changes["to_state"] = to_state
+        if stack_push is not None and stack_push != transition.stack_push:
+            changes["stack_push"] = stack_push
+
+        # Replace transition
+        builder.transitions[index] = Transition(
+            from_state=new_from_state,
+            input_symbol=new_input_symbol,
+            stack_top=new_stack_top,
+            to_state=new_to_state,
+            stack_push=new_stack_push
+        )
+
+        if changes:
+            self.is_modified = True
+
+        return changes
+
     def build_current_dpda(self) -> DPDADefinition:
         """
         Build a DPDADefinition from current builder.

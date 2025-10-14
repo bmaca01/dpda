@@ -8,10 +8,11 @@ Originally developed for CS341
 
 - **Complete DPDA Simulation**: Full implementation of deterministic pushdown automata
 - **Modular Architecture**: Clean separation of concerns with 7+ modules
-- **REST API**: FastAPI-based web service for DPDA operations
-- **Comprehensive Testing**: 157+ tests with TDD methodology
+- **REST API**: FastAPI-based web service for DPDA operations with session-based isolation
+- **Session Persistence**: Optional database storage for DPDAs across server restarts
+- **Comprehensive Testing**: 257+ tests with TDD methodology
 - **Multiple Output Formats**: JSON serialization, DOT graphs, D3.js, Cytoscape
-- **Session Management**: Build and manage multiple DPDAs
+- **Multi-Device Support**: Access your DPDAs from any device using session IDs
 
 ## Requirements
 
@@ -51,36 +52,51 @@ python3 src/main.py
 
 Start the API server:
 ```bash
-uvicorn api.endpoints:app --reload
+python run_api.py
 ```
 
 API documentation available at: `http://localhost:8000/docs`
 
-#### Example API Usage
+**⚠️ Important:** All API requests (except `/health`) require an `X-Session-ID` header with a valid UUID.
+
+#### Quick Example
 
 ```python
 import requests
+import uuid
+
+# Generate a session ID (or use an existing one)
+SESSION_ID = str(uuid.uuid4())
+headers = {
+    "X-Session-ID": SESSION_ID,
+    "Content-Type": "application/json"
+}
 
 # Create a DPDA
 response = requests.post("http://localhost:8000/api/dpda/create",
-    json={"name": "0n1n", "description": "Accepts 0^n1^n"})
+    headers=headers,
+    json={"name": "0n1n"})
 dpda_id = response.json()["id"]
 
 # Set states
 requests.post(f"http://localhost:8000/api/dpda/{dpda_id}/states",
+    headers=headers,
     json={"states": ["q0", "q1", "q2"], "initial_state": "q0", "accept_states": ["q2"]})
 
 # Set alphabets
 requests.post(f"http://localhost:8000/api/dpda/{dpda_id}/alphabets",
+    headers=headers,
     json={"input_alphabet": ["0", "1"], "stack_alphabet": ["$", "X"], "initial_stack_symbol": "$"})
 
-# Add transitions
+# Add transition
 requests.post(f"http://localhost:8000/api/dpda/{dpda_id}/transition",
+    headers=headers,
     json={"from_state": "q0", "input_symbol": "0", "stack_top": "$",
           "to_state": "q0", "stack_push": ["X", "$"]})
 
 # Test a string
 result = requests.post(f"http://localhost:8000/api/dpda/{dpda_id}/compute",
+    headers=headers,
     json={"input_string": "0011", "show_trace": True})
 print("Accepted:", result.json()["accepted"])
 ```

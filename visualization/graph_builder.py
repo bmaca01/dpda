@@ -3,7 +3,6 @@ Graph Builder module for DPDA visualization.
 Generates graph representations in various formats for visualization libraries.
 """
 
-import json
 from typing import Dict, Any, List, Set, Optional
 
 from models.dpda_definition import DPDADefinition
@@ -124,15 +123,15 @@ class GraphBuilder:
 
         return "\n".join(lines)
 
-    def to_d3_json(self, dpda: DPDADefinition) -> str:
+    def to_d3(self, dpda: DPDADefinition) -> Dict[str, Any]:
         """
-        Generate D3.js compatible JSON format.
+        Generate D3.js compatible data format.
 
         Args:
             dpda: The DPDA definition to visualize
 
         Returns:
-            JSON string for D3.js visualization
+            Dictionary with D3.js visualization data (nodes and links)
         """
         graph = self.build_graph(dpda)
 
@@ -159,9 +158,9 @@ class GraphBuilder:
             }
             d3_data['links'].append(d3_link)
 
-        return json.dumps(d3_data, indent=2)
+        return d3_data
 
-    def to_cytoscape(self, dpda: DPDADefinition) -> List[Dict[str, Any]]:
+    def to_cytoscape(self, dpda: DPDADefinition) -> Dict[str, Any]:
         """
         Generate Cytoscape.js compatible format.
 
@@ -169,7 +168,7 @@ class GraphBuilder:
             dpda: The DPDA definition to visualize
 
         Returns:
-            List of Cytoscape elements
+            Dictionary with 'elements' key containing list of Cytoscape elements
         """
         elements = []
 
@@ -222,4 +221,4 @@ class GraphBuilder:
             elements.append(edge_data)
             edge_id += 1
 
-        return elements
+        return {'elements': elements}

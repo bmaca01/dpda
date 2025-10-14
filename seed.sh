@@ -22,10 +22,22 @@ print_info() {
     echo -e "${YELLOW}[i]${NC} $1"
 }
 
+# Generate a session ID for this test session
+# Use Python's uuid module if available, otherwise generate a simple UUID
+if command -v python3 &> /dev/null; then
+    SESSION_ID=$(python3 -c "import uuid; print(uuid.uuid4())")
+else
+    # Fallback: generate a random UUID-like string
+    SESSION_ID=$(cat /proc/sys/kernel/random/uuid 2>/dev/null || echo "550e8400-e29b-41d4-a716-446655440000")
+fi
+
+print_info "Using session ID: $SESSION_ID"
+
 # 1. Create the DPDA
 print_status "Creating DPDA..."
 RESPONSE=$(curl -s -X POST http://localhost:8000/api/dpda/create \
   -H "Content-Type: application/json" \
+  -H "X-Session-ID: $SESSION_ID" \
   -d '{
     "name": "Arithmetic Expression DPDA",
     "description": "DPDA for parsing arithmetic expressions with +, -, *, / and parentheses"
@@ -47,6 +59,7 @@ print_info "Created DPDA with ID: $DPDA_ID"
 print_status "Setting states..."
 curl -s -X POST http://localhost:8000/api/dpda/${DPDA_ID}/states \
   -H "Content-Type: application/json" \
+  -H "X-Session-ID: $SESSION_ID" \
   -d '{
     "states": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13"],
     "initial_state": "0",
@@ -57,6 +70,7 @@ curl -s -X POST http://localhost:8000/api/dpda/${DPDA_ID}/states \
 print_status "Setting alphabets..."
 curl -s -X POST http://localhost:8000/api/dpda/${DPDA_ID}/alphabets \
   -H "Content-Type: application/json" \
+  -H "X-Session-ID: $SESSION_ID" \
   -d '{
     "input_alphabet": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "+", "-", "*", "/", "(", ")"],
     "stack_alphabet": ["$", "S", "E", "T", "F", "E1", "T1", "+", "-", "*", "/", ")", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "("],
@@ -70,6 +84,7 @@ print_status "Adding transitions..."
 add_transition() {
     curl -s -X POST http://localhost:8000/api/dpda/${DPDA_ID}/transition \
       -H "Content-Type: application/json" \
+      -H "X-Session-ID: $SESSION_ID" \
       -d "$1" > /dev/null
 }
 
@@ -259,7 +274,8 @@ print_info "All transitions added"
 
 # 5. Validate the DPDA
 print_status "Validating DPDA..."
-VALIDATION=$(curl -s -X POST http://localhost:8000/api/dpda/${DPDA_ID}/validate)
+VALIDATION=$(curl -s -X POST http://localhost:8000/api/dpda/${DPDA_ID}/validate \
+  -H "X-Session-ID: $SESSION_ID")
 IS_VALID=$(echo "$VALIDATION" | jq -r '.is_valid')
 if [ "$IS_VALID" = "true" ]; then
     print_info "DPDA is valid!"
@@ -278,6 +294,7 @@ test_input() {
 
     RESULT=$(curl -s -X POST http://localhost:8000/api/dpda/${DPDA_ID}/compute \
       -H "Content-Type: application/json" \
+      -H "X-Session-ID: $SESSION_ID" \
       -d "{
         \"input_string\": \"$input\",
         \"show_trace\": false
@@ -307,13 +324,15 @@ test_input ")(1)" "false"
 
 # 7. Export the DPDA definition (optional)
 print_status "Exporting DPDA definition..."
-EXPORT=$(curl -s -X GET http://localhost:8000/api/dpda/${DPDA_ID}/export)
+EXPORT=$(curl -s -X GET http://localhost:8000/api/dpda/${DPDA_ID}/export \
+  -H "X-Session-ID: $SESSION_ID")
 echo "$EXPORT" | jq -c '.data | {states: .states | length, transitions: .transitions | length}' | \
     xargs -I {} echo "  Exported DPDA: {}"
 
 # 8. Show DPDA info
 print_status "DPDA Summary:"
-curl -s -X GET http://localhost:8000/api/dpda/${DPDA_ID} | jq '{
+curl -s -X GET http://localhost:8000/api/dpda/${DPDA_ID} \
+  -H "X-Session-ID: $SESSION_ID" | jq '{
     id: .id,
     name: .name,
     num_states: .num_states,

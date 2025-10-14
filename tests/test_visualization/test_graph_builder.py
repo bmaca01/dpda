@@ -156,14 +156,12 @@ class TestGraphBuilder:
         assert 'q0 -> q1' in dot_string
         assert 'q1 -> q2' in dot_string
 
-    def test_to_d3_json(self, simple_dpda):
-        """Test D3.js compatible JSON format generation."""
+    def test_to_d3(self, simple_dpda):
+        """Test D3.js compatible data format generation."""
         builder = GraphBuilder()
-        d3_json = builder.to_d3_json(simple_dpda)
+        d3_data = builder.to_d3(simple_dpda)
 
-        assert isinstance(d3_json, str)
-        d3_data = json.loads(d3_json)
-
+        assert isinstance(d3_data, dict)
         assert 'nodes' in d3_data
         assert 'links' in d3_data  # D3 uses 'links' instead of 'edges'
 
@@ -181,8 +179,12 @@ class TestGraphBuilder:
     def test_to_cytoscape(self, simple_dpda):
         """Test Cytoscape.js compatible format generation."""
         builder = GraphBuilder()
-        cyto_data = builder.to_cytoscape(simple_dpda)
+        cyto_result = builder.to_cytoscape(simple_dpda)
 
+        assert isinstance(cyto_result, dict)
+        assert 'elements' in cyto_result
+
+        cyto_data = cyto_result['elements']
         assert isinstance(cyto_data, list)
 
         # Separate nodes and edges

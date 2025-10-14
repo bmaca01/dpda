@@ -330,3 +330,139 @@ class TestAPIModels:
         parsed = json.loads(json_data)
         assert parsed["accepted"] is True
         assert len(parsed["trace"]) == 1
+
+    def test_update_dpda_request(self):
+        """Test UpdateDPDARequest model."""
+        from api.models import UpdateDPDARequest
+
+        # Update name only
+        request = UpdateDPDARequest(name="new_name")
+        assert request.name == "new_name"
+        assert request.description is None
+
+        # Update description only
+        request = UpdateDPDARequest(description="New description")
+        assert request.name is None
+        assert request.description == "New description"
+
+        # Update both
+        request = UpdateDPDARequest(name="dpda1", description="Test DPDA")
+        assert request.name == "dpda1"
+        assert request.description == "Test DPDA"
+
+        # Empty update (both None) is valid
+        request = UpdateDPDARequest()
+        assert request.name is None
+        assert request.description is None
+
+        # Name must not be empty string if provided
+        with pytest.raises(ValueError):
+            UpdateDPDARequest(name="")
+
+    def test_update_dpda_response(self):
+        """Test UpdateDPDAResponse model."""
+        from api.models import UpdateDPDAResponse
+
+        response = UpdateDPDAResponse(
+            id="dpda_123",
+            updated=True,
+            message="DPDA updated successfully",
+            changes={"name": "new_name"}
+        )
+        assert response.id == "dpda_123"
+        assert response.updated is True
+        assert "name" in response.changes
+
+    def test_update_states_request(self):
+        """Test UpdateStatesRequest model."""
+        from api.models import UpdateStatesRequest
+
+        # Update all fields
+        request = UpdateStatesRequest(
+            states=["q0", "q1", "q2"],
+            initial_state="q0",
+            accept_states=["q2"]
+        )
+        assert len(request.states) == 3
+        assert request.initial_state == "q0"
+
+        # Update only states
+        request = UpdateStatesRequest(states=["q0", "q1"])
+        assert request.states == ["q0", "q1"]
+        assert request.initial_state is None
+
+        # Update only accept states
+        request = UpdateStatesRequest(accept_states=["q1"])
+        assert request.accept_states == ["q1"]
+        assert request.states is None
+
+        # Initial state must be in states if both provided
+        with pytest.raises(ValueError):
+            UpdateStatesRequest(
+                states=["q0", "q1"],
+                initial_state="q2"
+            )
+
+        # Accept states must be in states if both provided
+        with pytest.raises(ValueError):
+            UpdateStatesRequest(
+                states=["q0", "q1"],
+                accept_states=["q3"]
+            )
+
+    def test_update_alphabets_request(self):
+        """Test UpdateAlphabetsRequest model."""
+        from api.models import UpdateAlphabetsRequest
+
+        # Update all fields
+        request = UpdateAlphabetsRequest(
+            input_alphabet=["0", "1"],
+            stack_alphabet=["X", "$"],
+            initial_stack_symbol="$"
+        )
+        assert len(request.input_alphabet) == 2
+        assert "$" in request.stack_alphabet
+
+        # Update only input alphabet
+        request = UpdateAlphabetsRequest(input_alphabet=["a", "b"])
+        assert request.input_alphabet == ["a", "b"]
+        assert request.stack_alphabet is None
+
+        # Initial stack symbol must be in stack alphabet if both provided
+        with pytest.raises(ValueError):
+            UpdateAlphabetsRequest(
+                stack_alphabet=["X", "Y"],
+                initial_stack_symbol="$"
+            )
+
+    def test_update_transition_request(self):
+        """Test UpdateTransitionRequest model."""
+        from api.models import UpdateTransitionRequest
+
+        # Update all fields
+        request = UpdateTransitionRequest(
+            from_state="q0",
+            input_symbol="0",
+            stack_top="$",
+            to_state="q1",
+            stack_push=["0", "$"]
+        )
+        assert request.from_state == "q0"
+        assert request.stack_push == ["0", "$"]
+
+        # Update only target state
+        request = UpdateTransitionRequest(to_state="q2")
+        assert request.to_state == "q2"
+        assert request.from_state is None
+
+        # Update with epsilon values
+        request = UpdateTransitionRequest(
+            input_symbol=None,
+            stack_top=None
+        )
+        assert request.input_symbol is None
+        assert request.stack_top is None
+
+        # Partial update of stack push
+        request = UpdateTransitionRequest(stack_push=["X"])
+        assert request.stack_push == ["X"]

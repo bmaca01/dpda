@@ -154,3 +154,90 @@ class DeleteTransitionResponse(BaseModel):
     deleted: bool = Field(..., description="Whether deletion was successful")
     message: str = Field(..., description="Status message")
     remaining_transitions: int = Field(..., description="Number of remaining transitions")
+
+
+class TransitionItem(BaseModel):
+    """Model for a single transition item."""
+    from_state: str = Field(..., description="Source state")
+    input_symbol: Optional[str] = Field(None, description="Input symbol (None for epsilon)")
+    stack_top: Optional[str] = Field(None, description="Stack top symbol (None for epsilon)")
+    to_state: str = Field(..., description="Target state")
+    stack_push: List[str] = Field(..., description="Symbols to push onto stack")
+
+
+class TransitionsResponse(BaseModel):
+    """Response model for getting transitions."""
+    transitions: List[TransitionItem] = Field(..., description="List of transitions")
+    total: int = Field(..., description="Total number of transitions")
+
+
+class UpdateDPDARequest(BaseModel):
+    """Request model for updating DPDA metadata."""
+    name: Optional[str] = Field(None, min_length=1, description="New name for the DPDA")
+    description: Optional[str] = Field(None, description="New description for the DPDA")
+
+
+class UpdateDPDAResponse(BaseModel):
+    """Response model for DPDA update."""
+    id: str = Field(..., description="DPDA identifier")
+    updated: bool = Field(..., description="Whether update was successful")
+    message: str = Field(..., description="Status message")
+    changes: Dict[str, Any] = Field(..., description="Dictionary of changed fields")
+
+
+class UpdateStatesRequest(BaseModel):
+    """Request model for partial update of DPDA states."""
+    states: Optional[List[str]] = Field(None, min_length=1, description="New list of state names")
+    initial_state: Optional[str] = Field(None, description="New initial state")
+    accept_states: Optional[List[str]] = Field(None, description="New accept states")
+
+    @field_validator('states')
+    @classmethod
+    def validate_unique_states(cls, v: Optional[List[str]]) -> Optional[List[str]]:
+        """Ensure states are unique if provided."""
+        if v is not None and len(v) != len(set(v)):
+            raise ValueError("States must be unique")
+        return v
+
+    @model_validator(mode='after')
+    def validate_state_membership(self) -> 'UpdateStatesRequest':
+        """Validate that initial and accept states are in states list if both provided."""
+        if self.states is not None:
+            if self.initial_state is not None and self.initial_state not in self.states:
+                raise ValueError(f"Initial state '{self.initial_state}' must be in states list")
+            if self.accept_states is not None:
+                for state in self.accept_states:
+                    if state not in self.states:
+                        raise ValueError(f"Accept state '{state}' must be in states list")
+        return self
+
+
+class UpdateAlphabetsRequest(BaseModel):
+    """Request model for partial update of DPDA alphabets."""
+    input_alphabet: Optional[List[str]] = Field(None, description="New input alphabet symbols")
+    stack_alphabet: Optional[List[str]] = Field(None, min_length=1, description="New stack alphabet symbols")
+    initial_stack_symbol: Optional[str] = Field(None, description="New initial stack symbol")
+
+    @model_validator(mode='after')
+    def validate_initial_symbol(self) -> 'UpdateAlphabetsRequest':
+        """Validate initial stack symbol is in stack alphabet if both provided."""
+        if self.stack_alphabet is not None and self.initial_stack_symbol is not None:
+            if self.initial_stack_symbol not in self.stack_alphabet:
+                raise ValueError(f"Initial stack symbol '{self.initial_stack_symbol}' must be in stack alphabet")
+        return self
+
+
+class UpdateTransitionRequest(BaseModel):
+    """Request model for updating a transition."""
+    from_state: Optional[str] = Field(None, description="New source state")
+    input_symbol: Optional[str] = Field(None, description="New input symbol (None for epsilon)")
+    stack_top: Optional[str] = Field(None, description="New stack top symbol (None for epsilon)")
+    to_state: Optional[str] = Field(None, description="New target state")
+    stack_push: Optional[List[str]] = Field(None, description="New symbols to push onto stack")
+
+
+class UpdateTransitionResponse(BaseModel):
+    """Response model for transition update."""
+    updated: bool = Field(..., description="Whether update was successful")
+    message: str = Field(..., description="Status message")
+    changes: Dict[str, Any] = Field(..., description="Dictionary of changed fields")
